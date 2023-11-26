@@ -1,0 +1,13 @@
+# Blanket ignores and exceptions to them
+.*
+*~
+!.builds
+!.envrc
+!.gitignore
+
+# Nix outputs
+result
+result-*
+
+# Non-Nix outputs
+target/

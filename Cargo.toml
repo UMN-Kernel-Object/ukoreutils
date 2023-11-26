@@ -1,0 +1,15 @@
+[package]
+name = "ukoreutils"
+version = "0.1.0"
+edition = "2021"
+
+[dependencies]
+libc = { version = "0.2.150", default-features = false }
+
+[profile.dev]
+panic = "abort"
+strip = "debuginfo"
+
+[profile.release]
+panic = "abort"
+strip = "debuginfo"
