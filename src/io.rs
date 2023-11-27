@@ -7,9 +7,9 @@ pub struct FdWrite {
     pub fd: i32,
 }
 
-impl Write for FdWrite {
-    fn write_str(&mut self, s: &str) -> fmt::Result {
-        let mut bs = s.as_bytes();
+impl FdWrite {
+    /// Writes bs to the file descriptor, returning errno if there was an error.
+    pub fn write_bytes(&mut self, mut bs: &[u8]) -> Result<(), c_int> {
         while !bs.is_empty() {
             let ptr = bs.as_ptr() as *const c_void;
             let len = bs.len();
@@ -17,11 +17,12 @@ impl Write for FdWrite {
             let ret = unsafe { libc::write(self.fd, ptr, len) };
             if ret < 0 {
                 // If we got an EINTR, repeat the call.
-                if errno() == libc::EINTR {
+                let err = errno();
+                if err == libc::EINTR {
                     continue;
                 } else {
                     // Otherwise, return an error.
-                    return Err(fmt::Error);
+                    return Err(err);
                 }
             }
 
@@ -33,13 +34,19 @@ impl Write for FdWrite {
     }
 }
 
+impl Write for FdWrite {
+    fn write_str(&mut self, s: &str) -> fmt::Result {
+        self.write_bytes(s.as_bytes()).map_err(|_| fmt::Error)
+    }
+}
+
 /// Returns a `Write` corresponding to standard output.
-pub fn stdout() -> impl Write {
+pub fn stdout() -> FdWrite {
     FdWrite { fd: 1 }
 }
 
 /// Returns a `Write` corresponding to standard error.
-pub fn stderr() -> impl Write {
+pub fn stderr() -> FdWrite {
     FdWrite { fd: 2 }
 }
 
