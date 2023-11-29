@@ -1,8 +1,11 @@
 #![no_std]
 
-use core::ffi::{c_int, CStr};
+use core::{
+    ffi::{c_int, CStr},
+    mem::transmute,
+};
 use ukoreutils::{
-    io::{errno, stderr},
+    io::{clear_errno, errno, stderr, stdout},
     prelude::*,
 };
 
@@ -13,7 +16,34 @@ fn main() {
         die_with_errno(errno(), "opendir")
     }
 
-    todo!("{:#?}", (args, dir))
+    loop {
+        clear_errno();
+        let dirent = unsafe { libc::readdir(dir) };
+        if dirent.is_null() {
+            let err = errno();
+            if err == 0 {
+                break;
+            } else {
+                die_with_errno(errno(), "readdir")
+            }
+        }
+        let dirent = unsafe { *dirent };
+
+        let name: &[i8] = &dirent.d_name;
+        let name: &[u8] = unsafe { transmute(name) };
+        let name = CStr::from_bytes_until_nul(name).unwrap();
+
+        if name.to_bytes().starts_with(b".") && !args.all {
+            continue;
+        }
+
+        stdout().write_bytes(name.to_bytes()).unwrap();
+        stdout().write_bytes(&[args.sep]).unwrap();
+    }
+
+    if unsafe { libc::closedir(dir) } != 0 {
+        die_with_errno(errno(), "closedir")
+    }
 }
 
 fn die_with_errno(err: c_int, what: &str) -> ! {
@@ -26,14 +56,14 @@ fn die_with_errno(err: c_int, what: &str) -> ! {
 
 #[derive(Debug)]
 struct Args {
-    sep: char,
+    sep: u8,
     all: bool,
     path: &'static CStr,
 }
 
 fn parse_args() -> Args {
     let mut out = Args {
-        sep: '\n',
+        sep: b'\n',
         all: false,
         path: Default::default(),
     };
@@ -55,7 +85,7 @@ fn parse_args() -> Args {
         for ch in arg.iter().skip(1).copied() {
             match ch {
                 b'-' => options_done = true,
-                b'0' => out.sep = '\0',
+                b'0' => out.sep = b'\0',
                 b'a' => out.all = true,
                 _ => {
                     eprintln!("unknown option: -{}", char::from(ch));
@@ -68,10 +98,11 @@ fn parse_args() -> Args {
         args = &args[1..];
     }
 
-    if args.len() != 1 {
-        usage_and_die(argv0)
-    }
-    out.path = args[0];
+    out.path = match args.len() {
+        0 => CStr::from_bytes_with_nul(b".\0").unwrap(),
+        1 => args[0],
+        _ => usage_and_die(argv0),
+    };
 
     out
 }
