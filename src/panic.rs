@@ -13,7 +13,7 @@ fn eh_personality() {}
 #[panic_handler]
 fn panic(info: &PanicInfo) -> ! {
     let mut stderr = StderrIgnoringErrors;
-    let _ = write!(stderr, "{}", info);
+    let _ = writeln!(stderr, "{}", info);
     // SAFETY: This function is actually safe...
     unsafe {
         libc::abort();
