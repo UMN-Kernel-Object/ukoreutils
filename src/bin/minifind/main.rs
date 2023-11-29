@@ -1,10 +1,7 @@
 #![no_std]
 
-use core::ffi::{c_int, CStr};
-use ukoreutils::{
-    io::{errno, stderr},
-    prelude::*,
-};
+use core::ffi::CStr;
+use ukoreutils::{io::stderr, prelude::*};
 
 fn main() {
     let args = parse_args();

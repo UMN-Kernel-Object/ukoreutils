@@ -1,50 +1,11 @@
 #![no_std]
 
-use core::{
-    ffi::{c_int, CStr},
-    mem::transmute,
-};
-use ukoreutils::{
-    die_with_errno,
-    io::{clear_errno, errno, stderr, stdout},
-    prelude::*,
-};
+use core::ffi::CStr;
+use ukoreutils::{io::stderr, prelude::*};
 
 fn main() {
     let args = parse_args();
-    let dir = unsafe { libc::opendir(args.path.as_ptr()) };
-    if dir.is_null() {
-        die_with_errno(errno(), "opendir")
-    }
-
-    loop {
-        clear_errno();
-        let dirent = unsafe { libc::readdir(dir) };
-        if dirent.is_null() {
-            let err = errno();
-            if err == 0 {
-                break;
-            } else {
-                die_with_errno(errno(), "readdir")
-            }
-        }
-        let dirent = unsafe { *dirent };
-
-        let name: &[i8] = &dirent.d_name;
-        let name: &[u8] = unsafe { transmute(name) };
-        let name = CStr::from_bytes_until_nul(name).unwrap();
-
-        if name.to_bytes().starts_with(b".") && !args.all {
-            continue;
-        }
-
-        stdout().write_bytes(name.to_bytes()).unwrap();
-        stdout().write_bytes(&[args.sep]).unwrap();
-    }
-
-    if unsafe { libc::closedir(dir) } != 0 {
-        die_with_errno(errno(), "closedir")
-    }
+    todo!("{:#?}", args)
 }
 
 #[derive(Debug)]
