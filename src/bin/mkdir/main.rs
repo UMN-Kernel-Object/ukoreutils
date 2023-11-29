@@ -105,6 +105,6 @@ fn parse_args() -> Args {
 fn usage_and_die(argv0: &CStr) -> ! {
     eprint!("USAGE\n\n  ");
     stderr().write_bytes(argv0.to_bytes()).unwrap();
-    eprintln!(" [FLAGS] <PATHS...>\n\nFLAGS\n\n  -p\tCreate parent directories. No error if the directory exists");
+    eprintln!(" [FLAGS] <PATHS...>\n\nFLAGS\n\n  -p  Create parent directories. No error if the directory exists");
     unsafe { libc::exit(101) }
 }

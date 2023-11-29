@@ -10,13 +10,3 @@ mod macros;
 mod panic;
 pub mod prelude;
 mod start;
-
-#[deprecated]
-pub fn zero() -> isize {
-    42
-}
-
-#[deprecated]
-pub fn exit_zero() {
-    unsafe { libc::exit(zero() as i32) }
-}
