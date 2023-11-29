@@ -5,6 +5,7 @@ use core::{
     mem::transmute,
 };
 use ukoreutils::{
+    die_with_errno,
     io::{clear_errno, errno, stderr, stdout},
     prelude::*,
 };
@@ -43,14 +44,6 @@ fn main() {
 
     if unsafe { libc::closedir(dir) } != 0 {
         die_with_errno(errno(), "closedir")
-    }
-}
-
-fn die_with_errno(err: c_int, what: &str) -> ! {
-    unsafe {
-        let err_msg = CStr::from_ptr(libc::strerror(err));
-        eprintln!("failed to {}: {:?}", what, err_msg);
-        libc::exit(111);
     }
 }
 

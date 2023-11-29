@@ -4,7 +4,7 @@ extern crate alloc;
 
 use alloc::{borrow::ToOwned, ffi::CString};
 use core::ffi::{c_int, CStr};
-use ukoreutils::{io::stderr, prelude::*};
+use ukoreutils::{die_with_errno, io::stderr, prelude::*};
 
 fn main() {
     let args = parse_args();
@@ -42,14 +42,6 @@ fn mkdir(path: &CStr, parents: bool) -> Result<(), c_int> {
 
 fn dirname(path: CString) -> CString {
     unsafe { CString::from_raw(libc::dirname(path.into_raw())) }
-}
-
-fn die_with_errno(err: c_int, what: &str) -> ! {
-    unsafe {
-        let err_msg = CStr::from_ptr(libc::strerror(err));
-        eprintln!("failed to {}: {:?}", what, err_msg);
-        libc::exit(111);
-    }
 }
 
 #[derive(Debug, Default)]
