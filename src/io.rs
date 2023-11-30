@@ -1,5 +1,11 @@
 use core::fmt::{self, Write};
-use libc::{__errno_location, c_int, c_void};
+use libc::{c_int, c_void};
+
+#[cfg(target_os = "macos")]
+use libc::__error;
+
+#[cfg(target_os = "unix")]
+use libc::__errno_location;
 
 /// A `Write` corresponding to a file descriptor.
 #[derive(Debug)]
@@ -54,6 +60,10 @@ pub fn stderr() -> FdWrite {
 pub fn errno() -> c_int {
     unsafe {
         // SAFETY: This function doesn't actually have safety preconditions...
+        #[cfg(target_os = "macos")]
+        let ptr = __error();
+
+        #[cfg(target_os = "unix")]
         let ptr = __errno_location();
 
         // SAFETY: __errno_location will always give us a valid thread-unique pointer, so we can
@@ -66,6 +76,10 @@ pub fn errno() -> c_int {
 pub fn clear_errno() {
     unsafe {
         // SAFETY: This function doesn't actually have safety preconditions...
+        #[cfg(target_os = "macos")]
+        let ptr = __error();
+
+        #[cfg(target_os = "unix")]
         let ptr = __errno_location();
 
         // SAFETY: __errno_location will always give us a valid thread-unique pointer, so we can
